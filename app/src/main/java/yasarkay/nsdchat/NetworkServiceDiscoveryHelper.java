@@ -11,7 +11,9 @@ import java.net.ServerSocket;
 import java.util.ArrayList;
 
 /**
- * Created by qbeart on 28/08/15.
+ * NetworkServiceDiscoveryHelper class
+ * responsible for managing Nsd services
+ * and notifying its NetworkServiceDiscoveryListener clients
  */
 public class NetworkServiceDiscoveryHelper {
 
@@ -25,6 +27,8 @@ public class NetworkServiceDiscoveryHelper {
     private ResolveListener mResolveListener;
     private NsdManager mNsdManager;
     private ArrayList<NsdServiceInfo> mResolvedServices;
+
+    private ArrayList<NetworkServiceDiscoveryListener> mNetworkServiceDiscoveryListeners;
 
     public NetworkServiceDiscoveryHelper(Context context) {
 
@@ -41,6 +45,8 @@ public class NetworkServiceDiscoveryHelper {
         mResolveListener = new ResolveListener();
 
         mResolvedServices = new ArrayList<>();
+
+        mNetworkServiceDiscoveryListeners = new ArrayList<>();
 
         // Start advertising and start discovering
         registerService();
@@ -193,5 +199,15 @@ public class NetworkServiceDiscoveryHelper {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Adds the given listener to the listeners list
+     * Should be called by the listeners to be able to listen to
+     * network service discovery events
+     * @param listener Listener to be added
+     */
+    public void addNetworkServiceDiscoveryListener(NetworkServiceDiscoveryListener listener) {
+        mNetworkServiceDiscoveryListeners.add(listener);
     }
 }
