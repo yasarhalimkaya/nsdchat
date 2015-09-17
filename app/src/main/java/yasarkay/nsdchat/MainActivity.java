@@ -3,42 +3,28 @@ package yasarkay.nsdchat;
 import android.net.nsd.NsdServiceInfo;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity {
+
+    private final String TAG = "MainActivity";
 
     private NetworkServiceDiscoveryHelper mNetworkServiceDiscoveryHelper;
-    private TextView mResolvedServicesTextView;
-    private Button mRefreshButton;
-    private TextView mIncomingTextView;
-    private EditText mOutgoingEditText;
-    private Button mSendButton;
+    private MyNetworkServiceDiscoveryListener mMyNetworkServiceDiscoveryListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Get an handle for each view in the layout, except the titles
-        mResolvedServicesTextView = (TextView)findViewById(R.id.resolvedServicesTextView);
-
-        mRefreshButton = (Button)findViewById(R.id.refresh);
-        mRefreshButton.setOnClickListener(this);
-
-        mIncomingTextView = (TextView)findViewById(R.id.incomingTextView);
-
-        mOutgoingEditText = (EditText)findViewById(R.id.outgoingEditText);
-
-        mSendButton = (Button)findViewById(R.id.sendButton);
-        mSendButton.setOnClickListener(this);
-
         // Initialize our NetworkServiceDiscoveryHelper
         mNetworkServiceDiscoveryHelper = new NetworkServiceDiscoveryHelper(this);
+
+        // Instantiate a NetworkServiceDiscoveryListener and register it to the NetworkServiceDiscoveryHelper
+        mMyNetworkServiceDiscoveryListener = new MyNetworkServiceDiscoveryListener();
+        mNetworkServiceDiscoveryHelper.addNetworkServiceDiscoveryListener(mMyNetworkServiceDiscoveryListener);
     }
 
     @Override
@@ -63,26 +49,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.refresh : {
-                if (mNetworkServiceDiscoveryHelper.getResolvedServices().size() == 0) {
-                    mResolvedServicesTextView.setText("No service available");
-                } else {
-                    StringBuilder stringBuilder = new StringBuilder();
-                    for (NsdServiceInfo nsdServiceInfo : mNetworkServiceDiscoveryHelper.getResolvedServices()) {
-                        stringBuilder.append(nsdServiceInfo + "\n");
-                    }
-                    mResolvedServicesTextView.setText(stringBuilder.toString());
-                }
-                break;
-            }
-            case R.id.sendButton : {
-                // TODO : Send the message to the first available client
-            }
-            default :
-                break;
+    /**
+     * NetworkServiceDiscoveryListener implementation
+     */
+    class MyNetworkServiceDiscoveryListener implements NetworkServiceDiscoveryListener {
+
+        @Override
+        public void onNewServiceResolved(NsdServiceInfo nsdServiceInfo) {
+            if (BuildConfig.DEBUG)
+                Log.d(TAG, "onNewServiceResolved : " + nsdServiceInfo.toString());
+        }
+
+        @Override
+        public void onServiceUpdated(NsdServiceInfo nsdServiceInfo) {
+            if (BuildConfig.DEBUG)
+                Log.d(TAG, "onServiceUpdated : " + nsdServiceInfo.toString());
+        }
+
+        @Override
+        public void onServiceLost(NsdServiceInfo nsdServiceInfo) {
+            if (BuildConfig.DEBUG)
+                Log.d(TAG, "onServiceLost : " + nsdServiceInfo.toString());
         }
     }
 

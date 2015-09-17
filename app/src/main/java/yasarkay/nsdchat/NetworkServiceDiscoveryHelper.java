@@ -160,8 +160,14 @@ public class NetworkServiceDiscoveryHelper {
                 }
             }
 
-            if (index != -1)
+            if (index != -1) {
                 mResolvedServices.remove(index);
+
+                // A service is lost, notify listeners
+                for (NetworkServiceDiscoveryListener listener : mNetworkServiceDiscoveryListeners) {
+                    listener.onServiceLost(serviceInfo);
+                }
+            }
         }
     }
 
@@ -181,13 +187,34 @@ public class NetworkServiceDiscoveryHelper {
 
             // Assume the same machine is not resolved via resolveService in the first place
 
-            // Store the resolved service information, someone may want to do something with it
-            mResolvedServices.add(serviceInfo);
-        }
-    }
+            // Check if this is a new service or an already registered one but with updated properties
+            boolean found = false;
+            for (NsdServiceInfo nsi : mResolvedServices) {
+                if (nsi.getServiceName().equals(serviceInfo.getServiceName())) {
+                    if (!nsi.toString().equals(serviceInfo.toString())) {
+                        nsi = serviceInfo;
 
-    public ArrayList<NsdServiceInfo> getResolvedServices() {
-        return mResolvedServices;
+                        // This service is already registered but has new properties, notify listeners
+                        for (NetworkServiceDiscoveryListener listener : mNetworkServiceDiscoveryListeners) {
+                            listener.onServiceUpdated(serviceInfo);
+                        }
+                    }
+
+                    found = true;
+                    break;
+                }
+            }
+
+            // Store if this is a new service
+            if (!found) {
+                mResolvedServices.add(serviceInfo);
+
+                // New service is registered, notify listeners
+                for (NetworkServiceDiscoveryListener listener : mNetworkServiceDiscoveryListeners) {
+                    listener.onNewServiceResolved(serviceInfo);
+                }
+            }
+        }
     }
 
     public void teardown() {
